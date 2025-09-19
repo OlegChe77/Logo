@@ -54,7 +54,44 @@ body {
 
 header {
     text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    width: 100%;
 }
+
+.header-content {
+    flex-grow: 1;
+}
+
+.icon-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    color: var(--text-secondary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.icon-btn:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background-color: rgba(106, 90, 205, 0.1);
+}
+
+.icon-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
 
 header h1 {
     font-size: 2.5rem;
@@ -69,16 +106,69 @@ header p {
 }
 
 .content-wrapper {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
     background-color: var(--surface-color);
     padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
 }
 
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: -2rem; /* Overlap with content-wrapper padding */
+    padding: 0 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background-color: transparent;
+    color: var(--text-secondary-color);
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    transform: translateY(2px); /* Align with border */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tab-btn:hover {
+    color: var(--text-color);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.history-count {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+
 /* Controls Panel */
+#panel-generator {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
 .controls-panel {
     display: flex;
     flex-direction: column;
@@ -86,14 +176,15 @@ header p {
 }
 
 .form-group label {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 0.75rem;
     font-size: 1.1rem;
     font-weight: 500;
 }
 
-textarea#prompt-input,
-textarea#negative-prompt-input {
+textarea#prompt-input {
     width: 100%;
     padding: 0.75rem;
     border-radius: 8px;
@@ -106,8 +197,7 @@ textarea#negative-prompt-input {
     transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-textarea#prompt-input:focus,
-textarea#negative-prompt-input:focus {
+textarea#prompt-input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(106, 90, 205, 0.3);
@@ -135,6 +225,14 @@ textarea#negative-prompt-input:focus {
     background-color: var(--border-color);
     color: var(--text-color);
 }
+
+.style-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    background-color: transparent;
+    color: var(--text-secondary-color);
+}
+
 
 .style-btn.active {
     background-color: var(--primary-color);
@@ -180,9 +278,15 @@ textarea#negative-prompt-input:focus {
     border: 1px solid var(--border-color);
 }
 
-#reset-btn:hover {
+#reset-btn:hover:not(:disabled) {
     background-color: var(--border-color);
     color: var(--text-color);
+}
+
+#reset-btn:disabled {
+    color: #555;
+    border-color: #333;
+    cursor: not-allowed;
 }
 
 
@@ -198,10 +302,52 @@ textarea#negative-prompt-input:focus {
     overflow: hidden;
 }
 
-#result-placeholder, #loader {
+#result-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-align: center;
     color: var(--text-secondary-color);
 }
+
+#result-placeholder .error-display {
+    padding: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+#result-placeholder .error-display h3 {
+    color: var(--error-color);
+    font-size: 1.2rem;
+}
+
+#result-placeholder .error-display p {
+    color: var(--text-secondary-color);
+    max-width: 80%;
+}
+
+#result-placeholder .error-display button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    border: 2px solid var(--primary-color);
+    background-color: transparent;
+    color: var(--primary-color);
+}
+
+#result-placeholder .error-display button:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
 
 #result-wrapper {
     display: flex;
@@ -212,10 +358,12 @@ textarea#negative-prompt-input:focus {
     padding: 1rem;
     width: 100%;
     height: 100%;
+    position: relative;
 }
 
 .result-actions {
     display: flex;
+    align-items: center;
     gap: 1rem;
 }
 
@@ -236,6 +384,19 @@ textarea#negative-prompt-input:focus {
     transition: background-color 0.3s, color 0.3s;
 }
 
+#download-btn:hover:not(:disabled) {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+#download-btn:disabled {
+    cursor: not-allowed;
+    background-color: transparent;
+    color: #555;
+    border-color: #333;
+}
+
+
 #download-btn {
     border: 2px solid var(--primary-color);
     background-color: transparent;
@@ -251,9 +412,12 @@ textarea#negative-prompt-input:focus {
     border: 2px solid var(--text-secondary-color);
     background-color: transparent;
     color: var(--text-secondary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-#mockup-btn:hover {
+#mockup-btn:hover:not(:disabled) {
     background-color: var(--text-secondary-color);
     color: var(--text-color);
 }
@@ -265,23 +429,56 @@ textarea#negative-prompt-input:focus {
     color: #777;
 }
 
-.error-text {
-    position: absolute;
-    bottom: 1rem;
-    left: 1rem;
-    right: 1rem;
-    text-align: center;
-    color: var(--error-color);
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 0.5rem;
-    border-radius: 6px;
-}
-
 .hidden {
     display: none !important;
 }
 
-/* Loader Spinner */
+/* Tooltips */
+.tooltip-trigger {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--text-secondary-color);
+    border-radius: 50%;
+    color: var(--text-secondary-color);
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: help;
+    position: relative;
+    user-select: none;
+}
+
+.tooltip-trigger:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: normal;
+    white-space: nowrap;
+    z-index: 1001;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-trigger::after {
+    content: '';
+    position: absolute;
+    opacity: 0;
+    visibility: hidden;
+}
+
+
+/* Loaders */
 .spinner {
     width: 50px;
     height: 50px;
@@ -298,6 +495,23 @@ textarea#negative-prompt-input:focus {
     }
 }
 
+#restyle-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(30, 30, 30, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 10;
+    color: var(--text-color);
+}
+
 /* Modal styles */
 .modal-overlay {
     position: fixed;
@@ -312,12 +526,13 @@ textarea#negative-prompt-input:focus {
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity 0.3s ease, visibility 0s 0.3s;
 }
 
-.modal-overlay:not(.hidden) {
+.modal-overlay.visible {
     opacity: 1;
     visibility: visible;
+    transition: opacity 0.3s ease, visibility 0s 0s;
 }
 
 .modal-content {
@@ -335,7 +550,7 @@ textarea#negative-prompt-input:focus {
     transition: transform 0.3s ease;
 }
 
-.modal-overlay:not(.hidden) .modal-content {
+.modal-overlay.visible .modal-content {
     transform: scale(1);
 }
 
@@ -369,6 +584,71 @@ textarea#negative-prompt-input:focus {
     color: var(--text-secondary-color);
 }
 
+#settings-modal .form-group {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+#settings-modal label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    color: var(--text-secondary-color);
+}
+
+#api-key-input {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: #2a2a2a;
+    color: var(--text-color);
+    font-family: var(--font-family);
+    font-size: 1rem;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+#confirm-modal .modal-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.modal-actions button {
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.modal-actions .btn-primary {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.modal-actions .btn-primary:hover {
+    background-color: var(--primary-hover-color);
+}
+
+.modal-actions .btn-secondary {
+    background-color: transparent;
+    color: var(--text-secondary-color);
+    border: 1px solid var(--border-color);
+}
+
+.modal-actions .btn-secondary:hover {
+    background-color: var(--border-color);
+    color: var(--text-color);
+}
+
 #mockup-viewer {
     display: flex;
     justify-content: center;
@@ -376,6 +656,7 @@ textarea#negative-prompt-input:focus {
     width: 100%;
     aspect-ratio: 1 / 1;
     margin-bottom: 1.5rem;
+    position: relative;
 }
 
 .mockup-item {
@@ -389,8 +670,10 @@ textarea#negative-prompt-input:focus {
     width: 100%;
     height: 100%;
     text-align: center;
-    position: relative;
+    position: absolute;
     overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
 }
 
 .mockup-item img {
@@ -482,25 +765,26 @@ textarea#negative-prompt-input:focus {
 
 
 /* History Panel */
-.history-panel {
-    background-color: var(--surface-color);
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+#panel-history {
     text-align: center;
 }
 
-.history-panel h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
+#no-history-message {
+    padding: 4rem 1rem;
     color: var(--text-secondary-color);
 }
+#no-history-message p:first-child {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
 
 #history-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .history-item {
@@ -536,10 +820,44 @@ textarea#negative-prompt-input:focus {
     color: #fff;
 }
 
+/* Status Bar */
+.status-bar {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 100;
+}
+
+#api-status-indicator {
+    padding: 0.5rem 1rem;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: var(--text-secondary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+#api-status-indicator::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #f39c12; /* Orange for Free */
+    display: inline-block;
+}
+
+#api-status-indicator.pro::before {
+    background-color: #2ecc71; /* Green for Pro */
+}
+
 
 /* Responsive Design */
 @media (max-width: 900px) {
-    .content-wrapper {
+    #panel-generator {
         grid-template-columns: 1fr;
     }
 }
@@ -548,11 +866,20 @@ textarea#negative-prompt-input:focus {
     body {
         padding: 1rem;
     }
+    header {
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
     header h1 {
         font-size: 2rem;
     }
     .content-wrapper {
         padding: 1rem;
+    }
+    .tabs {
+        padding: 0 1rem;
+        margin-bottom: -1rem;
     }
     .modal-content {
         width: 95%;

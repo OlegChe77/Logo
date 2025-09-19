@@ -19,78 +19,108 @@
 <body>
     <main class="app-container">
         <header>
-            <h1>Генератор Логотипов на базе ИИ</h1>
-            <p>Создайте уникальный логотип для вашего бренда за считанные секунды</p>
-        </header>
-        <div class="content-wrapper">
-            <section class="controls-panel" aria-labelledby="controls-heading">
-                <h2 id="controls-heading" class="visually-hidden">Панель управления</h2>
-                <div class="form-group">
-                    <label for="prompt-input">1. Опишите ваш логотип</label>
-                    <textarea id="prompt-input" rows="4" placeholder="Например: 'умная лиса в очках читает книгу'"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>2. Выберите стиль</label>
-                    <div class="styles-container" role="radiogroup" aria-label="Стили логотипа">
-                        <button class="style-btn" data-style="Минимализм" role="radio" aria-checked="false" title="Минимализм">Минимализм</button>
-                        <button class="style-btn" data-style="3D" role="radio" aria-checked="false" title="3D">3D</button>
-                        <button class="style-btn" data-style="Винтаж" role="radio" aria-checked="false" title="Винтаж">Винтаж</button>
-                        <button class="style-btn" data-style="Неон" role="radio" aria-checked="false" title="Неон">Неон</button>
-                        <button class="style-btn" data-style="Геометрия" role="radio" aria-checked="false" title="Геометрия">Геометрия</button>
-                        <button class="style-btn" data-style="Киберпанк" role="radio" aria-checked="false" title="Киберпанк">Киберпанк</button>
-                        <button class="style-btn" data-style="Акварель" role="radio"aria-checked="false" title="Акварель">Акварель</button>
-                        <button class="style-btn" data-style="Рустик" role="radio" aria-checked="false" title="Рустик">Рустик</button>
-                        <button class="style-btn" data-style="Футуристичный" role="radio" aria-checked="false" title="Футуристичный">Футуристичный</button>
-                        <button class="style-btn" data-style="Классический" role="radio" aria-checked="false" title="Классический">Классический</button>
-                        <button class="style-btn" data-style="Мультяшный" role="radio" aria-checked="false" title="Мультяшный">Мультяшный</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="negative-prompt-input">3. Исключить детали (опционально)</label>
-                    <textarea id="negative-prompt-input" rows="2" placeholder="Например: 'текст, буквы, сложные детали'"></textarea>
-                </div>
-                 <div class="form-group">
-                    <label>4. Выберите соотношение сторон</label>
-                    <div class="styles-container" role="radiogroup" aria-label="Соотношение сторон логотипа">
-                        <button class="style-btn aspect-ratio-btn" data-ratio="1:1" role="radio" aria-checked="false">Квадрат (1:1)</button>
-                        <button class="style-btn aspect-ratio-btn" data-ratio="16:9" role="radio" aria-checked="false">Пейзаж (16:9)</button>
-                        <button class="style-btn aspect-ratio-btn" data-ratio="9:16" role="radio" aria-checked="false">Портрет (9:16)</button>
-                    </div>
-                </div>
-                <div class="main-actions">
-                    <button id="generate-btn" type="button">Сгенерировать</button>
-                    <button id="reset-btn" type="button">Очистить</button>
-                </div>
-            </section>
-            <section class="result-panel" aria-live="polite">
-                <div id="result-placeholder">
-                    <p>Здесь появится ваш логотип</p>
-                </div>
-                <div id="loader" class="hidden">
-                     <div class="spinner"></div>
-                     <p>Магия в процессе... Генерация может занять до минуты.</p>
-                </div>
-                <div id="result-wrapper" class="hidden">
-                    <img id="logo-image" alt="Сгенерированный логотип">
-                    <div class="result-actions">
-                        <button id="download-btn" type="button">Скачать</button>
-                        <button id="mockup-btn" type="button">Примерить на предметах</button>
-                    </div>
-                </div>
-                <p id="error-message" class="error-text"></p>
-            </section>
-        </div>
-
-        <section class="history-panel hidden" id="history-panel" aria-labelledby="history-heading">
-            <h2 id="history-heading">История генераций</h2>
-            <div id="history-grid">
-                <!-- History items will be dynamically inserted here -->
+            <div class="header-content">
+                <h1>Генератор Логотипов на базе ИИ</h1>
+                <p>Создайте уникальный логотип для вашего бренда за считанные секунды</p>
             </div>
-            <button id="clear-history-btn" type="button">Очистить историю</button>
-        </section>
+            <button id="settings-btn" class="icon-btn" aria-label="Настройки">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.44,0.17-0.48,0.41L9.18,5.03C8.59,5.27,8.06,5.59,7.56,5.97L5.17,5.01C4.95,4.94,4.7,5.01,4.58,5.23L2.66,8.55 c-0.11,0.2-0.06,0.47,0.12,0.61l2.03,1.58C4.74,11.06,4.7,11.36,4.7,11.69c0,0.33,0.04,0.63,0.1,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.42,2.22 c0.04,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.48-0.41l0.42-2.22c0.59-0.24,1.12-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0.01,0.59-0.22l1.92-3.32c0.11-0.2,0.06-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <nav class="tabs">
+            <button id="tab-generator" class="tab-btn active" role="tab" aria-controls="panel-generator" aria-selected="true">Генератор</button>
+            <button id="tab-history" class="tab-btn" role="tab" aria-controls="panel-history" aria-selected="false">
+                <span>История</span>
+                <span id="history-count" class="history-count">(0)</span>
+                <span class="tooltip-trigger" data-tooltip="Здесь хранятся ваши последние 20 сгенерированных логотипов. Кликните на любой, чтобы загрузить его для редактирования.">?</span>
+            </button>
+        </nav>
+
+        <div class="content-wrapper">
+            <div id="panel-generator" class="tab-panel active" role="tabpanel" aria-labelledby="tab-generator">
+                <section class="controls-panel" aria-labelledby="controls-heading">
+                    <h2 id="controls-heading" class="visually-hidden">Панель управления</h2>
+                    <div class="form-group">
+                        <label for="prompt-input">
+                            <span>1. Опишите ваш логотип</span>
+                            <span class="tooltip-trigger" data-tooltip="Введите ключевые слова или фразу, описывающую главную идею вашего логотипа.">?</span>
+                        </label>
+                        <textarea id="prompt-input" rows="4" placeholder="Например: 'умная лиса в очках читает книгу'"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <span>2. Выберите стиль</span>
+                             <span class="tooltip-trigger" data-tooltip="После создания 'оригинала' в Классическом стиле вы сможете применить к нему любой из этих стилей.">?</span>
+                        </label>
+                        <div class="styles-container" role="radiogroup" aria-label="Стили логотипа">
+                            <button class="style-btn" data-style="Минимализм" role="radio" aria-checked="false" title="Минимализм">Минимализм</button>
+                            <button class="style-btn" data-style="3D" role="radio" aria-checked="false" title="3D">3D</button>
+                            <button class="style-btn" data-style="Винтаж" role="radio" aria-checked="false" title="Винтаж">Винтаж</button>
+                            <button class="style-btn" data-style="Неон" role="radio" aria-checked="false" title="Неон">Неон</button>
+                            <button class="style-btn" data-style="Геометрия" role="radio" aria-checked="false" title="Геометрия">Геометрия</button>
+                            <button class="style-btn" data-style="Киберпанк" role="radio" aria-checked="false" title="Киберпанк">Киберпанк</button>
+                            <button class="style-btn" data-style="Акварель" role="radio"aria-checked="false" title="Акварель">Акварель</button>
+                            <button class="style-btn" data-style="Рустик" role="radio" aria-checked="false" title="Рустик">Рустик</button>
+                            <button class="style-btn" data-style="Футуристичный" role="radio" aria-checked="false" title="Футуристичный">Футуристичный</button>
+                            <button class="style-btn" data-style="Мультяшный" role="radio" aria-checked="false" title="Мультяшный">Мультяшный</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <span>3. Выберите формат файла</span>
+                            <span class="tooltip-trigger" data-tooltip="JPEG подходит для большинства случаев. PNG нужен для логотипов с прозрачным фоном. Формат блокируется после первой генерации.">?</span>
+                        </label>
+                        <div class="styles-container" role="radiogroup" aria-label="Формат файла">
+                            <button class="style-btn format-btn" data-format="image/jpeg" role="radio" aria-checked="false">JPEG</button>
+                            <button class="style-btn format-btn" data-format="image/png" role="radio" aria-checked="false">PNG</button>
+                        </div>
+                    </div>
+                    <div class="main-actions">
+                        <button id="generate-btn" type="button">Сгенерировать</button>
+                        <button id="reset-btn" type="button">Очистить</button>
+                    </div>
+                </section>
+                <section class="result-panel" aria-live="polite">
+                    <div id="result-placeholder">
+                        <p>Здесь появится ваш логотип</p>
+                    </div>
+                    <div id="loader" class="hidden">
+                         <div class="spinner"></div>
+                         <p>Магия в процессе... Генерация может занять до минуты.</p>
+                    </div>
+                    <div id="result-wrapper" class="hidden">
+                        <img id="logo-image" alt="Сгенерированный логотип">
+                        <div class="result-actions">
+                            <button id="download-btn" type="button">Скачать</button>
+                            <button id="mockup-btn" type="button">
+                                <span>Примерить на предметах</span>
+                                <span class="tooltip-trigger" data-tooltip="Посмотрите, как ваш логотип будет выглядеть на реальных предметах: футболке, кружке, визитке и т.д.">?</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="restyle-overlay" class="hidden">
+                        <div class="spinner"></div>
+                        <p>Применяем новый стиль...</p>
+                    </div>
+                </section>
+            </div>
+            <div id="panel-history" class="tab-panel" role="tabpanel" aria-labelledby="tab-history">
+                 <div id="no-history-message" class="hidden">
+                    <p>Ваша история генераций пуста.</p>
+                    <p>Начните создавать логотипы, и они появятся здесь.</p>
+                </div>
+                <div id="history-grid">
+                    <!-- History items will be dynamically inserted here -->
+                </div>
+                <button id="clear-history-btn" type="button">Очистить историю</button>
+            </div>
+        </div>
     </main>
 
-    <div id="mockup-modal" class="modal-overlay hidden">
+    <div id="mockup-modal" class="modal-overlay">
         <div class="modal-content">
             <button id="modal-close-btn" class="modal-close" aria-label="Закрыть">&times;</button>
             <h2>Примерка логотипа</h2>
@@ -105,6 +135,37 @@
             </div>
         </div>
     </div>
+
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="settings-modal-close-btn" class="modal-close" aria-label="Закрыть">&times;</button>
+            <h2>Настройки API</h2>
+            <p class="modal-description">Вы можете использовать свой собственный API ключ для снятия ограничений.</p>
+            <div class="form-group">
+                <label for="api-key-input">Ваш Gemini API Ключ</label>
+                <input type="password" id="api-key-input" placeholder="Введите ваш API ключ">
+            </div>
+            <div class="modal-actions">
+                <button id="save-api-key-btn" class="btn-primary">Сохранить ключ</button>
+                <button id="clear-api-key-btn" class="btn-secondary">Очистить и использовать ключ по умолчанию</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="confirm-title">Подтверждение</h2>
+            <p id="confirm-message" class="modal-description"></p>
+            <div class="modal-actions">
+                <button id="confirm-btn-no" class="btn-secondary">Отмена</button>
+                <button id="confirm-btn-yes" class="btn-primary">Да, продолжить</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="status-bar">
+        <div id="api-status-indicator"></div>
+    </footer>
 
     <script type="module" src="index.tsx"></script>
 </body>
