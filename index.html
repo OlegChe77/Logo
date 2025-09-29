@@ -48,14 +48,32 @@
                             <span>1. Опишите ваш логотип</span>
                             <span class="tooltip-trigger" data-tooltip="Введите ключевые слова или фразу, описывающую главную идею вашего логотипа.">?</span>
                         </label>
-                        <textarea id="prompt-input" rows="4" placeholder="Например: 'умная лиса в очках читает книгу'"></textarea>
+                        <textarea id="prompt-input" rows="3" placeholder="Например: 'умная лиса в очках читает книгу'"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="reference-input">
+                            <span>2. Добавьте референсы (опционально)</span>
+                            <span class="tooltip-trigger" data-tooltip="Загрузите до 3 изображений и укажите желаемые цвета, чтобы задать направление для ИИ.">?</span>
+                        </label>
+                        <div class="reference-controls">
+                            <div id="reference-upload-area" class="upload-area">
+                                <input type="file" id="reference-input" class="visually-hidden" accept="image/png, image/jpeg" multiple>
+                                <label for="reference-input" class="upload-label">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"></path></svg>
+                                    <span>Кликните или перетащите изображения (до 3)</span>
+                                </label>
+                            </div>
+                            <div id="thumbnails-container" class="thumbnails-container"></div>
+                            <input type="text" id="color-input" class="color-input" placeholder="Желаемые цвета, например: синий, золотой, белый">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>
-                            <span>2. Выберите стиль</span>
-                             <span class="tooltip-trigger" data-tooltip="После создания 'оригинала' в Классическом стиле вы сможете применить к нему любой из этих стилей.">?</span>
+                            <span>3. Выберите стиль</span>
+                             <span class="tooltip-trigger" data-tooltip="Выберите стиль для вашего логотипа. Вы можете изменить его в любой момент, чтобы перерисовать текущий результат.">?</span>
                         </label>
                         <div class="styles-container" role="radiogroup" aria-label="Стили логотипа">
+                            <button class="style-btn" data-style="Классический" role="radio" aria-checked="false" title="Классический">Классический</button>
                             <button class="style-btn" data-style="Минимализм" role="radio" aria-checked="false" title="Минимализм">Минимализм</button>
                             <button class="style-btn" data-style="3D" role="radio" aria-checked="false" title="3D">3D</button>
                             <button class="style-btn" data-style="Винтаж" role="radio" aria-checked="false" title="Винтаж">Винтаж</button>
@@ -70,7 +88,7 @@
                     </div>
                     <div class="form-group">
                         <label>
-                            <span>3. Выберите формат файла</span>
+                            <span>4. Выберите формат файла</span>
                             <span class="tooltip-trigger" data-tooltip="JPEG подходит для большинства случаев. PNG нужен для логотипов с прозрачным фоном. Формат блокируется после первой генерации.">?</span>
                         </label>
                         <div class="styles-container" role="radiogroup" aria-label="Формат файла">
@@ -89,7 +107,7 @@
                     </div>
                     <div id="loader" class="hidden">
                          <div class="spinner"></div>
-                         <p>Магия в процессе... Генерация может занять до минуты.</p>
+                         <p id="loader-message">Магия в процессе... Генерация может занять до минуты.</p>
                     </div>
                     <div id="result-wrapper" class="hidden">
                         <img id="logo-image" alt="Сгенерированный логотип">

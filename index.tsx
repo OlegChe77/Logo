@@ -12,6 +12,7 @@ const formatButtons = document.querySelectorAll('.format-btn') as NodeListOf<HTM
 const generateBtn = document.getElementById('generate-btn') as HTMLButtonElement;
 const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 const loader = document.getElementById('loader') as HTMLDivElement;
+const loaderMessage = document.getElementById('loader-message') as HTMLParagraphElement;
 const resultWrapper = document.getElementById('result-wrapper') as HTMLDivElement;
 const logoImage = document.getElementById('logo-image') as HTMLImageElement;
 const downloadBtn = document.getElementById('download-btn') as HTMLButtonElement;
@@ -39,7 +40,10 @@ const confirmModal = document.getElementById('confirm-modal') as HTMLDivElement;
 const confirmMessage = document.getElementById('confirm-message') as HTMLParagraphElement;
 const confirmBtnYes = document.getElementById('confirm-btn-yes') as HTMLButtonElement;
 const confirmBtnNo = document.getElementById('confirm-btn-no') as HTMLButtonElement;
-
+const referenceUploadArea = document.getElementById('reference-upload-area') as HTMLDivElement;
+const referenceInput = document.getElementById('reference-input') as HTMLInputElement;
+const thumbnailsContainer = document.getElementById('thumbnails-container') as HTMLDivElement;
+const colorInput = document.getElementById('color-input') as HTMLInputElement;
 
 // Tab elements
 const tabGeneratorBtn = document.getElementById('tab-generator') as HTMLButtonElement;
@@ -54,8 +58,16 @@ interface LogoData {
     dataUrl: string;
 }
 
+interface ReferenceImage {
+    id: string;
+    mimeType: string;
+    data: string; // base64 data without prefix
+    dataUrl: string; // full data URL for display
+}
+
 let selectedStyle = '';
 let selectedFormat = '';
+let referenceImages: ReferenceImage[] = [];
 
 let ai: GoogleGenAI | null = null;
 const USER_API_KEY_KEY = 'userGeminiApiKey';
@@ -206,6 +218,23 @@ function updateStyleButtonsState(disabled: boolean) {
     });
 }
 
+/** Disables reference inputs after generation. */
+function lockReferenceInputs() {
+    referenceInput.disabled = true;
+    colorInput.disabled = true;
+    referenceUploadArea.classList.add('disabled');
+    thumbnailsContainer.querySelectorAll('.thumbnail-remove').forEach(btn => {
+        (btn as HTMLButtonElement).disabled = true;
+    });
+}
+
+/** Enables reference inputs. */
+function unlockReferenceInputs() {
+    referenceInput.disabled = false;
+    colorInput.disabled = false;
+    referenceUploadArea.classList.remove('disabled');
+}
+
 
 /**
  * Disables all format buttons after a choice is made.
@@ -257,8 +286,10 @@ function handleFormatSelection(e: Event) {
  * Sets the UI to a loading state for primary generation.
  * @param {boolean} isLoading True to show loader, false to hide.
  */
-function setLoading(isLoading: boolean) {
+function setLoading(isLoading: boolean, message = 'Магия в процессе... Генерация может занять до минуты.') {
+    loaderMessage.textContent = message;
     loader.classList.toggle('hidden', !isLoading);
+
 
     if (isLoading) {
         resultPlaceholder.innerHTML = '';
@@ -266,13 +297,13 @@ function setLoading(isLoading: boolean) {
         resultWrapper.classList.add('hidden');
     }
 
-    const controlsToDisable = [generateBtn, resetBtn, promptInput, ...Array.from(formatButtons)];
+    const controlsToDisable = [generateBtn, resetBtn, promptInput, ...Array.from(formatButtons), referenceInput, colorInput];
     controlsToDisable.forEach(control => {
         (control as HTMLInputElement | HTMLButtonElement).disabled = isLoading;
     });
 
     // Style buttons are handled separately
-    updateStyleButtonsState(isLoading || !originalGenerationData);
+    updateStyleButtonsState(isLoading);
 
     // Actions on the result should be disabled
     mockupBtn.disabled = true;
@@ -384,10 +415,8 @@ async function generateLogo() {
         displayError('Описание не может быть пустым', 'Пожалуйста, введите описание для вашего логотипа.');
         return;
     }
-    
-    // On first generation, the style is always "Classic"
-    const styleForRequest = originalGenerationData ? selectedStyle : 'Классический';
-    if (!styleForRequest) {
+
+    if (!selectedStyle) {
         displayError('Стиль не выбран', 'Пожалуйста, выберите стиль для вашего логотипа.');
         return;
     }
@@ -396,12 +425,42 @@ async function generateLogo() {
         return;
     }
 
-    setLoading(true);
+    setLoading(true, 'Анализируем референсы...');
+    let finalPrompt = '';
 
     try {
+        const basePrompt = promptInput.value.trim();
+        const colors = colorInput.value.trim();
+        const styleForRequest = selectedStyle;
         const stylePrompt = STYLE_PROMPTS[styleForRequest] || styleForRequest;
         const backgroundPrompt = selectedFormat === 'image/png' ? 'с прозрачным фоном (transparent background)' : 'на чистом белом фоне';
-        const finalPrompt = `Логотип для "${prompt}", стиль: ${stylePrompt}, ${backgroundPrompt}.`;
+
+        if (referenceImages.length > 0 || colors) {
+            const visionPromptParts: any[] = [{ text: `Generate a detailed, creative prompt for an image generation AI. The goal is to create a logo for "${basePrompt}".` }];
+
+            if (referenceImages.length > 0) {
+                visionPromptParts.push({ text: "The logo should be heavily inspired by the following reference image(s) in terms of style, composition, and shapes:" });
+                referenceImages.forEach(img => {
+                    visionPromptParts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
+                });
+            }
+
+            if (colors) {
+                visionPromptParts.push({ text: `The desired color palette is: ${colors}.` });
+            }
+
+            visionPromptParts.push({ text: `The final logo should have a style of "${stylePrompt}" and be on a ${backgroundPrompt}. Combine all these instructions into a single, cohesive descriptive prompt for an image generation model.` });
+
+            const visionResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: { parts: visionPromptParts },
+            });
+            finalPrompt = visionResponse.text;
+        } else {
+            finalPrompt = `Логотип для "${basePrompt}", стиль: ${stylePrompt}, ${backgroundPrompt}.`;
+        }
+        
+        setLoading(true, 'Создаем ваш уникальный логотип...');
 
         const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
@@ -418,8 +477,9 @@ async function generateLogo() {
             const dataUrl = `data:${selectedFormat};base64,${base64ImageBytes}`;
             originalGenerationData = { prompt, dataUrl };
             displayLogo(dataUrl);
-            saveHistory();
+            saveHistory(originalGenerationData);
             lockFormatSelection();
+            lockReferenceInputs();
         } else {
             throw new Error('API did not return any images.');
         }
@@ -432,12 +492,31 @@ async function generateLogo() {
 }
 
 /**
+ * Displays a temporary error message in the restyle overlay.
+ * @param {string} message The error message to display.
+ */
+function handleRestyleError(message: string) {
+    const p = restyleOverlay.querySelector('p');
+    const spinner = restyleOverlay.querySelector('.spinner');
+
+    if (p) p.textContent = message;
+    if (spinner) (spinner as HTMLElement).style.display = 'none';
+
+    setTimeout(() => {
+        setRestyling(false); // Hides overlay, enables controls
+        // Reset overlay content for the next run
+        if (p) p.textContent = 'Применяем новый стиль...';
+        if (spinner) (spinner as HTMLElement).style.display = 'block';
+    }, 4000);
+}
+
+
+/**
  * Applies a new style to the original generated logo.
  * @param {string} style The new style to apply.
  */
 async function restyleLogo(style: string) {
     if (!ai || !originalGenerationData) return;
-
     if (!restyleOverlay.classList.contains('hidden')) return;
 
     setRestyling(true);
@@ -470,15 +549,18 @@ async function restyleLogo(style: string) {
             const newUrl = `data:${newMimeType};base64,${newData}`;
             displayLogo(newUrl); // Display the new styled logo
             saveHistory({ prompt, dataUrl: newUrl }); // Save the new version to history
+            setRestyling(false);
         } else {
-            throw new Error('API returned no image for restyling.');
+            const textResponse = response.text?.trim();
+            const errorMessage = textResponse 
+                ? `Не удалось применить стиль. Ответ модели: "${textResponse}"`
+                : 'Не удалось применить стиль. ИИ не вернул изображение, возможно из-за фильтров безопасности.';
+            handleRestyleError(errorMessage);
         }
 
     } catch (error) {
         const friendlyError = getFriendlyErrorMessage(error);
-        displayError(friendlyError.title, friendlyError.details + ' Функция трансформации является экспериментальной и может не всегда работать.');
-    } finally {
-        setRestyling(false);
+        handleRestyleError(`Ошибка: ${friendlyError.details}`);
     }
 }
 
@@ -653,7 +735,7 @@ function loadHistory() {
 function renderHistory() {
     historyGrid.innerHTML = '';
     historyCountSpan.textContent = `(${logoHistory.length})`;
-    noHistoryMessage.classList.toggle('hidden', logoHistory.length > 0);
+    noHistoryMessage.classList.toggle('hidden', logoHistory.length === 0);
     clearHistoryBtn.classList.toggle('hidden', logoHistory.length === 0);
 
     logoHistory.forEach((item, index) => {
@@ -694,10 +776,16 @@ function handleHistoryItemClick(index: number) {
             btn.setAttribute('aria-checked', String(isActive));
         });
         selectedFormat = mimeType;
+        
+        // Clear references when loading from history, as they were part of the original prompt
+        referenceImages = [];
+        renderThumbnails();
+        colorInput.value = '';
 
         displayLogo(item.dataUrl);
         switchTab('generator');
         lockFormatSelection();
+        lockReferenceInputs();
     }
 }
 
@@ -736,18 +824,26 @@ function resetUI(force = false) {
         promptInput.value = '';
         originalGenerationData = null;
 
+        // Reset references
+        referenceImages = [];
+        colorInput.value = '';
+        renderThumbnails();
+        unlockReferenceInputs();
+
+        // Set default style to "Classic"
+        selectedStyle = 'Классический';
         styleButtons.forEach(btn => {
-            btn.classList.remove('active');
-            btn.setAttribute('aria-checked', 'false');
+            const isClassic = btn.dataset.style === 'Классический';
+            btn.classList.toggle('active', isClassic);
+            btn.setAttribute('aria-checked', String(isClassic));
         });
+
         formatButtons.forEach(btn => {
             btn.classList.remove('active');
             btn.setAttribute('aria-checked', 'false');
         });
-
-        selectedStyle = ''; 
-        selectedFormat = 'image/jpeg';
         
+        selectedFormat = 'image/jpeg';
         const jpegBtn = document.querySelector('.format-btn[data-format="image/jpeg"]');
         if (jpegBtn) {
             jpegBtn.classList.add('active');
@@ -762,16 +858,72 @@ function resetUI(force = false) {
         generateBtn.disabled = !ai;
         
         unlockFormatSelection();
-        updateStyleButtonsState(true);
+        updateStyleButtonsState(false);
         closeConfirmModal();
     };
 
-    if (force) {
+    if (force || !originalGenerationData) {
         doReset();
     } else {
-        showConfirmationModal('Вы уверены, что хотите сбросить все настройки?', doReset);
+        showConfirmationModal('Вы уверены, что хотите сбросить все? Текущий логотип будет удален.', doReset);
     }
 }
+
+/** Renders the thumbnails for the selected reference images. */
+function renderThumbnails() {
+    thumbnailsContainer.innerHTML = '';
+    referenceImages.forEach(img => {
+        const thumb = document.createElement('div');
+        thumb.className = 'thumbnail';
+        thumb.style.backgroundImage = `url(${img.dataUrl})`;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'thumbnail-remove';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.setAttribute('aria-label', `Remove ${img.id}`);
+        removeBtn.onclick = () => {
+            referenceImages = referenceImages.filter(i => i.id !== img.id);
+            renderThumbnails();
+        };
+        
+        thumb.appendChild(removeBtn);
+        thumbnailsContainer.appendChild(thumb);
+    });
+}
+
+/** Handles file input changes for reference images. */
+function handleFileSelect(e: Event) {
+    const files = (e.target as HTMLInputElement).files;
+    if (!files) return;
+
+    const remainingSlots = 3 - referenceImages.length;
+    if (files.length > remainingSlots) {
+        // Ideally, show a small error message here
+        console.warn(`You can only upload ${remainingSlots} more image(s).`);
+    }
+
+    Array.from(files).slice(0, remainingSlots).forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUrl = e.target?.result as string;
+            const base64Data = dataUrl.split(',')[1];
+            referenceImages.push({
+                id: `${file.name}-${Date.now()}`,
+                mimeType: file.type,
+                data: base64Data,
+                dataUrl: dataUrl
+            });
+            renderThumbnails();
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Reset file input to allow re-uploading the same file
+    (e.target as HTMLInputElement).value = '';
+}
+
 
 /**
  * Initializes the application, sets up event listeners.
@@ -789,6 +941,29 @@ function initializeApp() {
     saveApiKeyBtn.addEventListener('click', saveApiKey);
     clearApiKeyBtn.addEventListener('click', clearApiKey);
     clearHistoryBtn.addEventListener('click', clearHistory);
+    referenceInput.addEventListener('change', handleFileSelect);
+
+    // Drag and drop for reference images
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        referenceUploadArea.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+    });
+    ['dragenter', 'dragover'].forEach(eventName => {
+        referenceUploadArea.addEventListener(eventName, () => referenceUploadArea.classList.add('hover'), false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        referenceUploadArea.addEventListener(eventName, () => referenceUploadArea.classList.remove('hover'), false);
+    });
+    referenceUploadArea.addEventListener('drop', (e) => {
+        const dt = (e as DragEvent).dataTransfer;
+        if (dt) {
+            const files = dt.files;
+            handleFileSelect({ target: { files } } as unknown as Event);
+        }
+    }, false);
+
 
     confirmBtnYes.addEventListener('click', () => {
         if (confirmCallback) {
